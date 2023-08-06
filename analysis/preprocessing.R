@@ -87,4 +87,12 @@ df<-df[rt>200 & rt<4000]
 #remove first trial of every block
 df<-df[trl>1]
 
-save(df, file='data/empirical_data/df.rdata')
+#adapt column names and add extra columns
+colnames(df)[1]="block"
+colnames(df)[2]="trial"
+colnames(df)[8]="card_left"
+colnames(df)[9]="card_right"
+colnames(df)[20]="ch_card"
+df=df%>%mutate(ch_key=if_else(key==75,1,0),card_left=card_left+1,card_right=card_right+1,ch_card=ch_card+1,ch_key=ch_key+1)
+
+save(df, file='data/empirical_data/inbal_empirical_data.rdata')

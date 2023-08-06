@@ -50,8 +50,8 @@ for ( i in 1:Nparameters){
                linetype="dotted",
                color = "blue", 
                linewidth=1.5)+
-    xlab(model_parameters$names[i])+
-    mytheme+
+    xlab(model_parameters$names[i])+scale_x_continuous(limits=c(0,1))+
+    mytheme
   
     theme(axis.ticks.y=element_blank(),
           axis.text.y=element_blank())

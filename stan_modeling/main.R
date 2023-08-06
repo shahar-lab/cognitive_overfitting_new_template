@@ -7,11 +7,11 @@ path=set_workingmodel()
 #####simulate data--------------------
 
 cfg = list(Nsubjects        = 20,
-           Nblocks          = 2,
-           Ntrials_perblock = 50,
+           Nblocks          = 4,
+           Ntrials_perblock = 10,
            Narms            = 4,  #number of arms in the task 
-           Nraffle          = 2,  #number of arms offered for selection each trial
-           rndwlk           = read.csv('./functions/rndwlk.csv',header=F)
+           Noptions         = 2,  #number of arms offered for selection each trial
+           rndwlk           = read.csv("randomwalk_ 4 arms_ 50 trials1.csv",header=F)
            )
 
 simulate_parameters(path,cfg,plotme=T)
@@ -19,19 +19,21 @@ simulate_parameters(path,cfg,plotme=T)
 simulate_artifical_data(path,cfg)
 load(paste0(path$data,'/artificial_data.Rdata'))
 
-
 simulate_convert_to_standata(path,cfg,
                              
-                             var_toinclude  = c(
-                              'first_trial_in_block',
-                              'trial',
-                              'offer1',
-                              'offer2',
-                              'choice',
-                              'unchosen',
-                              'reward',
-                              'selected_offer',
-                              'fold')
+                             c(
+                               'first_trial_in_block', 
+                               'block',
+                               'trial',
+                               'reward',
+                               'card_left',
+                               'card_right',
+                               'ch_card',
+                               'ch_key',
+                               'selected_offer',
+                               'catch_trial',
+                               'condition_difficulty',
+                               'condition_scarcity')
 )
 
 #####sample posterior--------------------
@@ -42,10 +44,11 @@ modelfit_mcmc(path,
                
               mymcmc = list(
                 datatype = set_datatype() ,
-                samples  = 1000,
-                warmup  = 700,
-                chains  = 2,
-                cores   = 2)
+                samples  = 100,
+                warmup  = 1000,
+                chains  = 10,
+                cores   = 10,
+                parallel_chains = 10)
 )
 
 #examine_mcmc(path) #needs debugging
@@ -69,8 +72,9 @@ PE    = fit$draws(variables ='PE_external',format='draws_matrix')
 
 #####compare models--------------------
 
+#which model?
 modelfit_compile_loo(path)
-
+#which data?
 modelfit_mcmc_loo(path,
               
               mymcmc = list(

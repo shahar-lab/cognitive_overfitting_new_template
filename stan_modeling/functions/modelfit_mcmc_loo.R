@@ -8,7 +8,7 @@ modelfit_mcmc_loo <-function(path,mymcmc){
   # load standata
  
   if (mymcmc$datatype=='empirical') {print('using empirical data')
-    load('./data/empirical_data/standata.Rdata')}
+    load('./data/empirical_data/inbal_empirical_standata.Rdata')}
   if (mymcmc$datatype=='artificial'){print('using artificial data')
     current_model=set_data()
     load(paste0(current_model,'/artificial_standata.Rdata'))}
