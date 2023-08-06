@@ -10,8 +10,12 @@ load(paste0(path$data,'/artificial_data.Rdata'))
 
 
 
-df=df%>%mutate(stay                  =(choice==lag(choice)),
-               reward_oneback         =lag(reward))
+df=df%>%mutate(stay                  =(ch_card==lag(ch_card)),
+               reward_oneback         =lag(reward),
+               stay_key              =ch_key==lag(ch_key),
+               reoffer_ch            =lag(ch_card)==card_right|lag(ch_card)==card_left,
+               unchosen              =if_else(ch_card==card_right,card_left,card_right),
+               reoffer_unch            =lag(unchosen)==card_right|lag(unchosen)==card_left)
                
 
 model= glmer(stay ~ reward_oneback+(reward_oneback| subject), 
