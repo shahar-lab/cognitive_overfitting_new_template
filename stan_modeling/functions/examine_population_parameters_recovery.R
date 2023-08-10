@@ -27,7 +27,6 @@ load(paste0(path$data,'/model_parameters.Rdata'))
 Nparameters = length(model_parameters$artificial_population_location)
 p=list()
 for ( i in 1:Nparameters){
-  
   samples    = fit$draws(variables = paste0('population_locations[',i,']'),
                       format    = 'matrix')
   
@@ -41,6 +40,9 @@ for ( i in 1:Nparameters){
   samples    = data.frame(samples=unlist(samples))
   true_value = model_parameters$artificial_population_location[i]
   
+  mean=model_parameters$artificial_population_location[i]
+  std=model_parameters$artificial_population_scale[i]
+  
   p[[i]]=
   ggplot(data.frame(samples=as.numeric(unlist(samples))),aes(x=samples))+
     ggdist::stat_halfeye(point_interval = 'median_hdi',
@@ -50,7 +52,7 @@ for ( i in 1:Nparameters){
                linetype="dotted",
                color = "blue", 
                linewidth=1.5)+
-    xlab(model_parameters$names[i])+scale_x_continuous(limits=c(0,1))+
+    xlab(model_parameters$names[i])+scale_x_continuous(limits=c(mean-1.5*std,mean+1.5*std))+
     mytheme
   
     theme(axis.ticks.y=element_blank(),

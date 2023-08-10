@@ -6,7 +6,7 @@ data {
   int<lower = 1> Ntrials;                                           //maximum number of trials per subject (without missing data). Used to form the subject x trials matricies. 
   int<lower = 1> Ntrials_per_subject[Nsubjects];                    //number of trials left for each subject after data omission
   int<lower = 2> Narms;                                             //number of overall alternatives
-  int<lower = 2> Nraffle;                                           //number of cards per trial
+  int<lower = 2> Noptions;                                           //number of cards per trial
   
   //Behavioral data:
     //each variable being a subject x trial matrix
@@ -23,9 +23,9 @@ data {
 transformed data{
   int<lower = 1> Nparameters=3; //number of parameters
   vector[Narms] Q_cards_initial;     // initial values for Qcards (defined here to avoid doing this many times across iterations)
-  vector[Nraffle] Q_keys_initial;     // initial values for Qkeys
+  vector[Noptions] Q_keys_initial;     // initial values for Qkeys
   Q_cards_initial = rep_vector(0.5, Narms);
-  Q_keys_initial = rep_vector(0.5, Nraffle);
+  Q_keys_initial = rep_vector(0.5, Noptions);
 }
 
 parameters {
@@ -52,13 +52,13 @@ transformed parameters {
   matrix                  [Ntrials,Nsubjects] Qcards_diff;
   matrix                  [Ntrials,Nsubjects] Qkeys_diff;
   vector [Narms] Q_cards;
-  vector [Nraffle] Q_keys;
-  vector[Nraffle] Qnet;
+  vector [Noptions] Q_keys;
+  vector[Noptions] Qnet;
  
 for (subject in 1:Nsubjects) {
   alpha[subject]     = inv_logit(population_locations[1]  + population_scales[1] * alpha_random_effect[subject]);
-  omega[subject]     = inv_logit(population_locations[2]  + population_scales[2] * omega_random_effect[subject]);
-  beta [subject] =              (population_locations[3]  + population_scales[3] * beta_random_effect[subject]);
+  beta [subject] =              (population_locations[2]  + population_scales[2] * beta_random_effect[subject]);
+  omega[subject]     = inv_logit(population_locations[3]  + population_scales[3] * omega_random_effect[subject]);
   for (trial in 1:Ntrials_per_subject[subject]){
   if (first_trial_in_block[subject,trial] == 1) {
       Q_cards=Q_cards_initial;

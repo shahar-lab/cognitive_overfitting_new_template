@@ -6,9 +6,9 @@ path=set_workingmodel()
 
 #####simulate data--------------------
 
-cfg = list(Nsubjects        = 20,
+cfg = list(Nsubjects        = 50,
            Nblocks          = 4,
-           Ntrials_perblock = 10,
+           Ntrials_perblock = 50,
            Narms            = 4,  #number of arms in the task 
            Noptions         = 2,  #number of arms offered for selection each trial
            rndwlk           = read.csv("randomwalk_ 4 arms_ 50 trials1.csv",header=F)
@@ -19,22 +19,8 @@ simulate_parameters(path,cfg,plotme=T)
 simulate_artifical_data(path,cfg)
 load(paste0(path$data,'/artificial_data.Rdata'))
 
-simulate_convert_to_standata(path,cfg,
-                             
-                             c(
-                               'first_trial_in_block', 
-                               'block',
-                               'trial',
-                               'reward',
-                               'card_left',
-                               'card_right',
-                               'ch_card',
-                               'ch_key',
-                               'selected_offer',
-                               'catch_trial',
-                               'condition_difficulty',
-                               'condition_scarcity')
-)
+source(paste0(path$model,'_standata_parameters.r'))
+simulate_convert_to_standata(path,cfg,model_stan_parameters$parameters)
 
 #####sample posterior--------------------
 
