@@ -33,6 +33,7 @@ for ( i in 1:Nparameters){
             'true',
             'recovered',
             'navy')+
+    xlab(model_parameters$names[i])+
     mytheme
 }
 do.call("grid.arrange", c(p, ncol=1))
