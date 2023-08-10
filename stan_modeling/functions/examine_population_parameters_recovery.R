@@ -30,8 +30,10 @@ for ( i in 1:Nparameters){
   samples    = fit$draws(variables = paste0('population_locations[',i,']'),
                       format    = 'matrix')
   
+  limit=c(0,10)
   if (model_parameters$transformation[i]=='logit'){
     samples = plogis(samples)
+    limit=c(0,1)
   }
   if (model_parameters$transformation[i]=='exp'){
     samples = log(samples)
@@ -39,9 +41,6 @@ for ( i in 1:Nparameters){
   
   samples    = data.frame(samples=unlist(samples))
   true_value = model_parameters$artificial_population_location[i]
-  
-  mean=model_parameters$artificial_population_location[i]
-  std=model_parameters$artificial_population_scale[i]
   
   p[[i]]=
   ggplot(data.frame(samples=as.numeric(unlist(samples))),aes(x=samples))+
@@ -52,7 +51,7 @@ for ( i in 1:Nparameters){
                linetype="dotted",
                color = "blue", 
                linewidth=1.5)+
-    xlab(model_parameters$names[i])+scale_x_continuous(limits=c(mean-1.5*std,mean+1.5*std))+
+    xlab(model_parameters$names[i])+scale_x_continuous(limits=limit)+
     mytheme
   
     theme(axis.ticks.y=element_blank(),
