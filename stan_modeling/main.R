@@ -6,8 +6,8 @@ path=set_workingmodel()
 
 #####simulate data--------------------
 
-cfg = list(Nsubjects        = 50,
-           Nblocks          = 4,
+cfg = list(Nsubjects        = 100,
+           Nblocks          = 6,
            Ntrials_perblock = 50,
            Narms            = 4,  #number of arms in the task 
            Noptions         = 2,  #number of arms offered for selection each trial

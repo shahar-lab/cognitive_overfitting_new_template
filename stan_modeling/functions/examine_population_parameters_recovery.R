@@ -45,7 +45,7 @@ for ( i in 1:Nparameters){
   p[[i]]=
   ggplot(data.frame(samples=as.numeric(unlist(samples))),aes(x=samples))+
     ggdist::stat_halfeye(point_interval = 'median_hdi',
-                         .width = c(0.89,0.97),
+                         .width = c(0.85,0.95),
                          fill = 'pink')+
     geom_vline(xintercept = true_value, 
                linetype="dotted",

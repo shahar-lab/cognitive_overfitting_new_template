@@ -8,32 +8,25 @@ library(tidyr)
 library(lme4)
 library(raincloudplots)
 
-rm(list=ls())
-load('./data/empirical_data/inbal_empirical_data.rdata')
+
 df<-na.omit(df)
 
 df=df%>%mutate(block=as.factor(block),reward_oneback=as.factor(lag(reward)),
-               reoffer_ch=lag(ch_card)==card_right|lag(ch_card)==card_left,
-               unch_card=if_else(ch_card==card_right,card_left,card_right),
-               reoffer_unch=lag(unch_card)==card_right|lag(unch_card)==card_left,
-               stay_key=ch_key==lag(ch_key))
-df=df%>%mutate(block=as.numeric(block),difficulty=as.factor(if_else((block==1|block==2),1,0)),scarcity=as.factor(if_else((block==1|block==3),1,0)))         
-              
-accuracy=df%>%group_by(subject)%>%summarise(accuracy=mean(accuracy))%>%pull(accuracy)
-omega=unique(df$omega)
-cor.test(rew,omega)
+               reoffer_ch=lag(ch_key)==key1|lag(ch_key)==key2,
+               unch_key=if_else(ch_key==key1,key2,key1),
+               reoffer_unch=lag(unch_key)==key1|lag(unch_key)==key2,
+               stay_color=ch_color==lag(ch_color),
+               stay_shape=ch_shape==lag(ch_shape),
+               stay_texture=ch_texture==lag(ch_texture),
+               acc=exp_val_ch>exp_val_unch)
 
-df%>%group_by(subject)%>%summarise(mean_acc=mean(acc))
+df= df%>%filter(reoffer_ch==F,reoffer_unch==F)
 
-model= glm(stay_key ~ reward_oneback*block, 
-             data = df%>%filter(catch_trial==T), 
-             family = binomial)
 
-model= glm(stay_key ~ reward_oneback*scarcity*difficulty, 
-           data = df%>%filter(catch_trial==T), 
-           family = binomial)
-
-summary(model)
+mean_accuracy=mean(df%>%group_by(subject)%>%summarise(acc=mean(acc))%>%pull(acc))
+group_color=df%>%group_by(reward_oneback)%>%summarise(mean(stay_color))
+group_shape=df%>%group_by(reward_oneback)%>%summarise(mean(stay_shape))
+group_texture=df%>%group_by(reward_oneback)%>%summarise(mean(stay_texture))
 
 #-----------------------------------------------------------------------------------
 library(brms)
