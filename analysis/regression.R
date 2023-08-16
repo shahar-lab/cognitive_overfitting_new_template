@@ -27,19 +27,38 @@ mean_accuracy=mean(df%>%group_by(subject)%>%summarise(acc=mean(acc))%>%pull(acc)
 group_color=df%>%group_by(reward_oneback)%>%summarise(mean(stay_color))
 group_shape=df%>%group_by(reward_oneback)%>%summarise(mean(stay_shape))
 group_texture=df%>%group_by(reward_oneback)%>%summarise(mean(stay_texture))
+#-----------------------------------------------------------------------------------
+
+model= glmer(stay_color ~ reward_oneback+(reward_oneback| subject), 
+             data = df%>%filter(reoffer_ch==F,reoffer_unch==F),
+             family = binomial,
+             control = glmerControl(optimizer = "bobyqa"), nAGQ = 0)
+
+library(effects)
+  plot(effect('reward_oneback',model))
+
+
+
 
 #-----------------------------------------------------------------------------------
 library(brms)
-model1= brm(stay_key ~ 0 + Intercept+reward_oneback+(1+reward_oneback|subject), 
+
+mypriors=c(set_prior(prior = "normal(0,0.2)", class = "b",coef = "Intercept"),
+           set_prior(prior = "normal(0,0.2)", class = "b",coef = "reward_oneback1")
+)
+
+model1= brm(stay_color ~ 0 + Intercept+reward_oneback+(1+reward_oneback|subject), 
            data = df%>%filter(reoffer_ch==F,reoffer_unch==F), 
            family = bernoulli(link = "logit"),
            warmup = 1000,
            iter = 2000,    
            cores =20,
            chains=20,
-           )
-save(model, file=paste0(path$data,'/regression_model_interaction.rdata'))
-plot(conditional_effects(model1),plot=FALSE)[[1]]+theme_classic()
-
-interaction <- emmeans(model, ~ reward_oneback * scarcity * difficulty,type="response")
-emmip(interaction,  scarcity~ reward_oneback  | difficulty , CIs = TRUE)
+           prior=mypriors,
+           backend = "cmdstanr",
+          )
+             
+save(model1, file=paste0(path$data,'/regression_model_interaction.rdata'))
+plot(conditional_effects(model1),plot=TRUE)[[1]]+theme_bw()
+summary(model1)
+my_posterior_plot(model1,"reward_oneback1","reward_oneback", "gray",0,2)
