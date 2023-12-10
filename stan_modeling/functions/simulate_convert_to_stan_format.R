@@ -17,7 +17,8 @@ simulate_convert_to_standata <-function (path,cfg,var_toinclude){
                                  var_toinclude        = var_toinclude,
                                  additional_arguments = list(
                                    Narms  = cfg$Narms, 
-                                   Noptions= cfg$Noptions))
+                                   Nraffle= cfg$Nraffle,
+                                   Ndims  = cfg$Ndims))
 
   #save
   save(data_for_stan,file=paste0(path$data,'/artificial_standata.Rdata'))

@@ -9,13 +9,15 @@ simulate_artifical_data <-function(path,cfg){
 
 
  source(paste0(path$model,'.r'))
-  
+  # for (subject in 1:Nsubjects) {
+  #   df=rbind(df, sim.block(subject=subject, parameters=model_parameters$artificial_individual_parameters[subject,],cfg=cfg))
+  # }
   df<-
   foreach(
     subject = 1:Nsubjects,
     .combine = rbind
     ) %do% {
-    sim.block(subject=subject, 
+    sim.block(subject=subject,
               parameters=model_parameters$artificial_individual_parameters[subject,],
               cfg=cfg)
   }

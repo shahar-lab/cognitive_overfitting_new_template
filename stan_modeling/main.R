@@ -6,18 +6,21 @@ path=set_workingmodel()
 
 #####simulate data--------------------
 
-cfg = list(Nsubjects        = 20,
-           Nblocks          = 4,
-           Ntrials_perblock = 10,
+cfg = list(Nsubjects        = 150,
+           Nblocks          = 8,
+           Ntrials_perblock = 100,
            Narms            = 4,  #number of arms in the task 
-           Noptions         = 2,  #number of arms offered for selection each trial
-           rndwlk           = read.csv("randomwalk_ 4 arms_ 50 trials1.csv",header=F)
+           Nraffle          = 2,  #number of arms offered for selection each trial
+           Ndims            = 2,
+           Nfeatures        = 2,
+           rndwlk           = read.csv("functions/empirical_rndwlk.csv",header=F)
            )
 
 simulate_parameters(path,cfg,plotme=T)
 
 simulate_artifical_data(path,cfg)
 load(paste0(path$data,'/artificial_data.Rdata'))
+
 
 simulate_convert_to_standata(path,cfg,
                              
@@ -30,28 +33,30 @@ simulate_convert_to_standata(path,cfg,
                                'card_right',
                                'ch_card',
                                'ch_key',
-                               'selected_offer',
-                               'catch_trial',
-                               'condition_difficulty',
-                               'condition_scarcity')
+                               'selected_offer')
 )
 
 #####sample posterior--------------------
-
-modelfit_compile(path)
-
+modelfit_compile(path,format=F)
+init_function <- function() {
+  list(
+    population_location_eta=runif(1,-0.5,0.5),
+    population_scale_eta=runif(1,0,0.5))
+  }
 modelfit_mcmc(path,
                
               mymcmc = list(
                 datatype = set_datatype() ,
-                samples  = 100,
-                warmup  = 1000,
-                chains  = 10,
-                cores   = 10,
-                parallel_chains = 10)
+                samples  =1000,
+                warmup  = 3000,
+                chains  = 5,
+                cores   = 5
+                )
 )
-
-#examine_mcmc(path) #needs debugging
+mypars=c("population_locations[1]",
+         "population_locations[2]",
+         "population_locations[3]")
+examine_mcmc(path,mypars, datatype = set_datatype())
 
 examine_population_parameters_recovery(path)
 
@@ -61,6 +66,7 @@ examine_individual_parameters_recovery(path)
 ####examine model
 #load parameters
 fit   = readRDS(paste0(path$data,'/modelfit_recovery.rds'))
+weight_key = fit$draws(variables ='weight_key',format='draws_matrix')
 Qdiff = fit$draws(variables ='Qdiff_external',format='draws_matrix')
 Qval1 = fit$draws(variables ='Qval1_external',format='draws_matrix')
 Qval2 = fit$draws(variables ='Qval2_external',format='draws_matrix')
@@ -79,10 +85,10 @@ modelfit_mcmc_loo(path,
               
               mymcmc = list(
                 datatype = set_datatype() ,
-                samples  = 500,
-                warmup  = 500,
-                chains  = 8,
-                cores   = 8)
+                samples  = 50,
+                warmup  = 1000,
+                chains  = 20,
+                cores   = 20)
 )
 compare=compare_models(path)
 

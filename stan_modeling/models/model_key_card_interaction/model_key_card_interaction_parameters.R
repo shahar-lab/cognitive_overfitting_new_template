@@ -1,0 +1,5 @@
+model_parameters=list()
+model_parameters$names                             =c('alpha_card','alpha_key','alpha_key_card','beta_card','beta_key','beta_key_card')
+model_parameters$transformation                    =c('logit','logit','logit','none','none','none')
+model_parameters$artificial_population_location    =c(0.5,0.5,0.5,4,4,4)
+model_parameters$artificial_population_scale       =c(1,1,1,1.5,1.5,1.5)

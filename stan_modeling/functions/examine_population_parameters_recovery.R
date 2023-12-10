@@ -39,8 +39,8 @@ for ( i in 1:Nparameters){
   }
   
   samples    = data.frame(samples=unlist(samples))
-  true_value = model_parameters$artificial_population_location[i]
-  
+  sample_value = mean(model_parameters$artificial_individual_parameters[,i])
+  true_value=model_parameters$artificial_population_location[i]
   p[[i]]=
   ggplot(data.frame(samples=as.numeric(unlist(samples))),aes(x=samples))+
     ggdist::stat_halfeye(point_interval = 'median_hdi',
@@ -50,8 +50,17 @@ for ( i in 1:Nparameters){
                linetype="dotted",
                color = "blue", 
                linewidth=1.5)+
-    xlab(model_parameters$names[i])+scale_x_continuous(limits=c(0,1))+
-    mytheme
+    geom_vline(xintercept = sample_value, 
+               linetype="dotted",
+               color = "lightblue", 
+               linewidth=1.5)+
+    xlab(model_parameters$names[i])+mytheme
+    if (model_parameters$transformation[i] == "logit") {
+      p[[i]] = p[[i]] + scale_x_continuous(limits = c(0, 1))
+    } else {
+      p[[i]] = p[[i]] + scale_x_continuous(limits = c(-1, 10))
+    }
+    
   
     theme(axis.ticks.y=element_blank(),
           axis.text.y=element_blank())

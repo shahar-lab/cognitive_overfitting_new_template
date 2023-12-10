@@ -17,7 +17,8 @@ modelfit_mcmc <-function(path,mymcmc){
     iter_sampling   = mymcmc$samples,
     iter_warmup     = mymcmc$warmup,
     chains          = mymcmc$chains,
-    parallel_chains = mymcmc$cores)  
+    parallel_chains = mymcmc$cores,
+    init            = mymcmc$init)  
 
 
   #save
