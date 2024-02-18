@@ -5,10 +5,10 @@ sim.block = function(subject,parameters,cfg){
   #pre-allocation
   
   #set parameters
-  alpha = parameters['alpha']
-  alpha_task = parameters['alpha_task']
+  alpha = inv_logit_scaled(parameters['alpha'])
   beta  = parameters['beta']
-  eta = parameters['eta']
+  lambda0 = parameters['lambda0']
+  lambda1 = parameters['lambda1']
   #set initial var
   Narms              = cfg$Narms
   Nraffle            = cfg$Nraffle
@@ -18,17 +18,24 @@ sim.block = function(subject,parameters,cfg){
   #expvalues          = cfg$rndwlk
   #rownames(expvalues)=c('ev1','ev2','ev3','ev4')
   df                 =data.frame()
-  prior_relevant=1
-  weight_uniform=1/Ndims
+  prior_relevant=c(1,0)
+  weight_uniform=rep(1/Ndims,Ndims)
   for (block in 1:Nblocks){
     
-    expvalues=t(data.frame(a=rep(0.2,Ntrials_perblock),b=rep(0.8,Ntrials_perblock),c=rep(0.2,Ntrials_perblock),d=rep(0.8,Ntrials_perblock)))
-
+    if(block%%3==0){
+      expvalues=t(data.frame(a=rep(0.45,Ntrials_perblock),b=rep(0.55,Ntrials_perblock),c=rep(0.45,Ntrials_perblock),d=rep(0.55,Ntrials_perblock)))
+    }
+    else if(block%%3==1){
+      expvalues=t(data.frame(a=rep(0.15,Ntrials_perblock),b=rep(0.25,Ntrials_perblock),c=rep(0.15,Ntrials_perblock),d=rep(0.25,Ntrials_perblock)))  
+    }
+    else{
+      expvalues=t(data.frame(a=rep(0.75,Ntrials_perblock),b=rep(0.85,Ntrials_perblock),c=rep(0.75,Ntrials_perblock),d=rep(0.85,Ntrials_perblock)))  
+    }
+    
     Q_cards= rep(0.5, Narms)
     Q_keys = rep(0.5, Nraffle)
     V_task=0.5
     weights=c(prior_relevant,1-prior_relevant)
-    lambda=1
     for (trial in 1:Ntrials_perblock){
       #computer offer
       pair  = sample(1:2,1)
@@ -57,6 +64,9 @@ sim.block = function(subject,parameters,cfg){
       PE_cards=reward-Q_cards[ch_card]
       PE_task=reward-V_task
       PE_total=reward-Qnet
+      
+      lambda = lambda0+lambda1*abs(PE_task)
+      transformed_lambda=inv_logit_scaled(lambda)
       #save trial's data
       
       #create data for current trials
@@ -93,10 +103,11 @@ sim.block = function(subject,parameters,cfg){
         PE_task,
         V_task,
         alpha,
-        alpha_task,
-        eta,
         beta,
+        lambda0,
+        lambda1,
         lambda,
+        transformed_lambda,
         weight_card=weights[1],
         weight_key=weights[2]
       )
@@ -105,13 +116,11 @@ sim.block = function(subject,parameters,cfg){
       
       Q_cards[ch_card] = Q_cards[ch_card] + alpha * PE_cards
       Q_keys [ch_key] = Q_keys[ch_key] +alpha * PE_keys
-      V_task = V_task +alpha_task * PE_task
+      V_task = V_task +alpha * PE_task
       
       #updating weights
-      lambda = lambda + eta * ((1 - abs(PE_task)) - lambda)
-      
-      weights[1]= lambda* prior_relevant + (1 - lambda) * weight_uniform
-      weights[2]= 1-weights[1]
+
+      weights= transformed_lambda* prior_relevant + (1 - transformed_lambda) * weight_uniform
     }
   }     
   

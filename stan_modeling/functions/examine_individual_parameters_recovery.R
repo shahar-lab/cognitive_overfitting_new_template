@@ -27,12 +27,20 @@ load(paste0(path$data,'/model_parameters.Rdata'))
 Nparameters = length(model_parameters$artificial_population_location)
 p=list()
 for ( i in 1:Nparameters){
+  if (model_parameters$transformation[i]=='logit'){
+    true_values=inv_logit_scaled(model_parameters$artificial_individual_parameters[,model_parameters$names[i]]) 
+  }
+  else{
+    true_values = model_parameters$artificial_individual_parameters[,model_parameters$names[i]]
+  }
+  recovered = apply(fit$draws(variables =model_parameters$names[i],format='draws_matrix'), 2, mean)
   p[[i]]=
-  my_xyplot(model_parameters$artificial_individual_parameters[,model_parameters$names[i]],
-            apply(fit$draws(variables =model_parameters$names[i],format='draws_matrix'), 2, mean),
+  my_xyplot(true_values,
+            recovered,
             'true',
             'recovered',
             'navy')+
+    xlab(model_parameters$names[i])+
     mytheme
 }
 do.call("grid.arrange", c(p, ncol=1))

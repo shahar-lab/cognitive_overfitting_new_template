@@ -40,7 +40,7 @@ data {
 }
 
 transformed data{
-  int<lower = 1> Nparameters=4; //number of parameters
+  int<lower = 1> Nparameters=3; //number of parameters
 }
 
 parameters {
@@ -51,19 +51,17 @@ parameters {
   vector<lower=0>[Nparameters] population_scales;          //vector of random effects variance for each model parameter
   
   //individuals level
-  vector[Nsubjects] alpha_relevant_random_effect;
-  vector[Nsubjects] alpha_irrelevant_random_effect;
+  vector[Nsubjects] alpha_random_effect;
   vector[Nsubjects] beta_random_effect;
-  vector[Nsubjects] eta_random_effect;
+  vector[Nsubjects] lambda1_random_effect;
 }
 
 
 transformed parameters {
   //declare variables and parameters
-  vector<lower=0, upper=1>[Nsubjects] alpha_relevant;
-  vector<lower=0, upper=1>[Nsubjects] alpha_irrelevant;
+  vector<lower=0, upper=1>[Nsubjects] alpha;
   vector                  [Nsubjects] beta;
-  vector<lower=0, upper=1>[Nsubjects] eta;
+  vector[Nsubjects] lambda1;
   vector[Ndims]  weights;
   matrix[Ntrials,Nsubjects] weight_key;
   matrix[Ntrials,Nsubjects] weight_card;
@@ -73,30 +71,29 @@ transformed parameters {
   vector [Narms] Q_cards;
   vector [Nraffle] Q_keys;
   vector [Nraffle] Qnet;
-  real total_weights;
+  vector [Ndims] prior_relevant;
+  vector [Ndims] weight_uniform;
   real lambda;
-  real prior_relevant ;
-  real weight_uniform ;
-  prior_relevant=1;
-  weight_uniform=1.0/Ndims;
+  real transformed_lambda;
   real diff_reliability;
-  real scaled_diff_reliability;
+  prior_relevant[1]=1;
+  prior_relevant[2]=0;
+  weight_uniform[1]=1.0/Ndims;
+  weight_uniform[2]=1.0/Ndims;
 for (subject in 1:Nsubjects) {
   
-  alpha_relevant[subject]     = inv_logit(population_locations[1]  + population_scales[1] * alpha_relevant_random_effect[subject]);
-  alpha_irrelevant[subject]     = inv_logit(population_locations[2]  + population_scales[2] * alpha_irrelevant_random_effect[subject]);
-  beta [subject]     =          (population_locations[3]  + population_scales[3] * beta_random_effect[subject]);
-  eta[subject]   = inv_logit(population_locations[3]  + population_scales[3] * eta_random_effect[subject]);
-  
+  alpha[subject]     = inv_logit(population_locations[1]  + population_scales[1] * alpha_random_effect[subject]);
+  beta [subject]     =          (population_locations[2]  + population_scales[2] * beta_random_effect[subject]);
+  lambda1[subject]   = (population_locations[3]  + population_scales[3] * lambda1_random_effect[subject]);  
   
   for (trial in 1:Ntrials_per_subject[subject]){
     
   if (first_trial_in_block[subject,trial] == 1) {
       Q_cards=rep_vector(0.5, Narms);
       Q_keys=rep_vector(0.5, Nraffle);
-      lambda=1;
-     weights[1]=prior_relevant;
-     weights[2]=1-prior_relevant;
+     weights[1]=prior_relevant[1];
+     weights[2]=prior_relevant[2];
+     lambda = 3;
     }
           Qnet[1]=weights[1]*Q_cards[card_left[subject,trial]]+weights[2]*Q_keys[1]; //We compound the value of the card appearing on the left and the value of the left key.
 
@@ -110,20 +107,19 @@ for (subject in 1:Nsubjects) {
  PE_key[subject,trial]  =reward[subject,trial] - Q_keys[ch_key[subject,trial]];
  
 //Update values ch_key=1 means choosing right
- Q_cards[ch_card[subject,trial]] += alpha_relevant[subject] * (PE_card[subject,trial]); //update card_value according to reward
- Q_keys[ch_key[subject,trial]]   += alpha_irrelevant[subject] * (PE_key[subject,trial]); //update key value according to reward
+ Q_cards[ch_card[subject,trial]] += alpha[subject] * (PE_card[subject,trial]); //update card_value according to reward
+ Q_keys[ch_key[subject,trial]]   += alpha[subject] * (PE_key[subject,trial]); //update key value according to reward
  
 //store weights
-weight_key[trial,subject]=weights[2];
 weight_card[trial,subject]=weights[1];
+weight_key[trial,subject]=weights[2];
+
 //updating weights
-diff_reliability=abs(PE_card[subject,trial])-abs(PE_key[subject,trial]);
-scaled_diff_reliability=(diff_reliability+1)/2;
-lambda = lambda + eta[subject] * ((1 - scaled_diff_reliability)-lambda);
-
-weights[1]= lambda * prior_relevant + (1-lambda) * weight_uniform;
-weights[2]=1-weights[1];
-
+diff_reliability=abs(PE_key[subject,trial])-abs(PE_card[subject,trial]);
+lambda= lambda+lambda1[subject] * diff_reliability;
+transformed_lambda = inv_logit(lambda);
+weights[1]= transformed_lambda * prior_relevant[1] + (1-transformed_lambda) * weight_uniform[1];
+weights[2]= transformed_lambda * prior_relevant[2] + (1-transformed_lambda) * weight_uniform[2];
 
 }
 }
@@ -132,14 +128,13 @@ weights[2]=1-weights[1];
 model {
   
   // population level priors (hyper-parameters)
-  population_locations   ~ normal(0,2);
-  population_scales      ~ normal(0,2);    
+  population_locations   ~ normal(0,3);
+  population_scales      ~ normal(0,3);    
   
   // individual level priors (subjects' parameters)
-  alpha_relevant_random_effect ~ std_normal();
-  alpha_irrelevant_random_effect ~ std_normal();
+  alpha_random_effect ~ std_normal();
   beta_random_effect ~ std_normal();
-  eta_random_effect ~ std_normal();
+  lambda1_random_effect ~ std_normal();
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 //Likelihood function per subject per trial

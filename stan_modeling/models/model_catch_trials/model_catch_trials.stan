@@ -18,7 +18,7 @@ data {
   int<lower = 0> card_right[Nsubjects,Ntrials];            //offered card in right bandit
   int<lower = 0> first_trial_in_block[Nsubjects,Ntrials]; 
   int<lower = 0> selected_offer [Nsubjects,Ntrials];
-  int<lower = 0> block [Nsubjects,Ntrials];
+  int<lower = 0> block_num [Nsubjects,Ntrials];
   int catch_trial [Nsubjects,Ntrials];
   int condition_difficulty [Nsubjects,Ntrials];
   int condition_scarcity [Nsubjects,Ntrials];

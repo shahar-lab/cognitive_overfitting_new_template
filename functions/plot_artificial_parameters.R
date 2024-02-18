@@ -1,10 +1,15 @@
 #Aim:
 #create a quick graphical summary of the artificial parameters that were sampled
 
-plot_artifical_parameters<-function(model_parameters,plot_method){
+plot_artifical_parameters<-function(model_parameters,plot_method,transform){
   
     #draw histograms from individual parameters
-    data=as.data.frame(model_parameters$artificial_individual_parameters)
+  data=as.data.frame(model_parameters$artificial_individual_parameters)
+  for (p in 1:length(model_parameters$names)){
+  if(model_parameters$transformation[p]=='logit'&transform==T){
+  data[,p]=inv_logit_scaled(data[,p])
+  }
+  }
     data_long <- data %>%                        
       pivot_longer(colnames(data)) %>% 
       as.data.frame()

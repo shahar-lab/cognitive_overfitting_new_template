@@ -7,7 +7,7 @@ modelfit_mcmc <-function(path,mymcmc){
 
   # load data
   if (mymcmc$datatype=='empirical') {print('using empirical data')
-                              load('./data/empirical_data/inbal_empirical_standata.Rdata')}
+                              load('./data/empirical_data/inbal_empirical_standata_blocks1_2_3.Rdata')}
   if (mymcmc$datatype=='artificial'){print('using artificial data')
                               load(paste0(path$data,'/artificial_standata.Rdata'))}
 
@@ -18,14 +18,16 @@ modelfit_mcmc <-function(path,mymcmc){
     iter_warmup     = mymcmc$warmup,
     chains          = mymcmc$chains,
     parallel_chains = mymcmc$cores,
-    init            = mymcmc$init)  
+    init            = mymcmc$init,
+    refresh         = mymcmc$refresh)  
 
 
   #save
-  if (mymcmc$datatype=='empirical'){fit$save_object(paste0(path$data,'/modelfit_empirical.rds'))
+  if (mymcmc$datatype=='empirical'){fit$save_object(paste0(path$data,'/modelfit_empirical1_2_3.rds'))
     cat(paste0('[stan_modeling]:  "modelfit_empirical.rds" was saved at "',path$data,'"'))
   }
   if (mymcmc$datatype=='artificial'){fit$save_object(paste0(path$data,'/modelfit_recovery.rds'))
     cat(paste0('[stan_modeling]:  "modelfit_recovery.rds" was saved at "',path$data,'"'))
     }
+  
 }

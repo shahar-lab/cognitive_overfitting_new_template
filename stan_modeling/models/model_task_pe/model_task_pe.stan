@@ -63,12 +63,9 @@ parameters {
   //individuals level
 
   vector[Nsubjects] alpha_random_effect;
-  
-  vector[Nsubjects] alpha_task_random_effect;
-  
   vector[Nsubjects] beta_random_effect;
-  
-  vector[Nsubjects] eta_random_effect;
+  vector[Nsubjects] lambda0_random_effect;
+  vector[Nsubjects] lambda1_random_effect;
 
 }
 
@@ -77,13 +74,9 @@ transformed parameters {
   //declare variables and parameters
 
   vector<lower=0, upper=1>[Nsubjects] alpha;
-  
-  vector<lower=0, upper=1>[Nsubjects] alpha_task;
-
-  vector[Nsubjects] beta;
-  
-  vector <lower=0, upper=1> [Nsubjects] eta;
-
+  vector                  [Nsubjects] beta;
+  vector[Nsubjects] lambda0;
+  vector[Nsubjects] lambda1;
 
   vector[Ndims] weights;
 
@@ -107,35 +100,33 @@ transformed parameters {
 
   real V_task;
   
+  vector [Ndims] prior_relevant;
+  vector [Ndims] weight_uniform;
   real lambda;
-  
-  real prior_relevant = 1;
-  
-  real weight_uniform =1.0/Ndims;
+  real transformed_lambda;
+  real diff_reliability;
+  prior_relevant[1]=1;
+  prior_relevant[2]=0;
+  weight_uniform[1]=1.0/Ndims;
+  weight_uniform[2]=1.0/Ndims;
   
   for (subject in 1 : Nsubjects) {
 
     alpha[subject] = inv_logit(population_locations[1]
 
-                               + population_scales[1]
+                     + population_scales[1] * alpha_random_effect[subject]);
 
-                               * alpha_random_effect[subject]);
-                               
-    alpha_task[subject] = inv_logit(population_locations[2]
+    beta[subject] = (population_locations[2]
 
-                                    + population_scales[2]
+                     + population_scales[2] * beta_random_effect[subject]);
 
-                                    * alpha_task_random_effect[subject]);
+    lambda0[subject] = (population_locations[3]
 
+                     + population_scales[3] * lambda0_random_effect[subject]);
+                    
+    lambda1[subject] = (population_locations[4]
 
-    beta[subject] = (population_locations[3]
-
-                     + population_scales[3] * beta_random_effect[subject]);
-
-    eta[subject] = inv_logit(population_locations[4]
-
-                    + population_scales[4] * eta_random_effect[subject]);
-
+                     + population_scales[4] * lambda1_random_effect[subject]);
 
 
     for (trial in 1 : Ntrials_per_subject[subject]) {
@@ -148,11 +139,8 @@ transformed parameters {
 
         V_task = 0.5;
 
-        weights[1] = prior_relevant;
-
-        weights[2] = 1-prior_relevant;
-        
-        lambda = 1;
+        weights[1]=prior_relevant[1];
+        weights[2]=prior_relevant[2];
 
       }
 
@@ -196,20 +184,18 @@ transformed parameters {
 
                                         * (PE_key[subject, trial]); //update key value according to reward
 
-      V_task += alpha_task[subject] * (PE_task[subject, trial]); //update general value
-
-      
+      V_task += alpha[subject] * (PE_task[subject, trial]); //update general value
 
       //store weights
 
       weight_card[trial, subject] = weights[1];
       weight_key[trial, subject] = weights[2];
 
-
       //updating weights
-      lambda = lambda + eta[subject] * ((1 - abs(PE_task[subject,trial]))-lambda);
-      weights[1]= lambda* prior_relevant + (1 - lambda) * weight_uniform;
-      weights[2]= 1-weights[1];
+      lambda= lambda0[subject]+lambda1[subject] *2*abs(PE_task[subject,trial]);
+      transformed_lambda = inv_logit(lambda);
+      weights[1]= transformed_lambda * prior_relevant[1] + (1-transformed_lambda) * weight_uniform[1];
+      weights[2]= transformed_lambda * prior_relevant[2] + (1-transformed_lambda) * weight_uniform[2];
 
     }
 
@@ -221,19 +207,19 @@ model {
 
   // population level priors (hyper-parameters)
 
-  population_locations ~ normal(0, 2);
+  population_locations ~ normal(0, 3);
 
-  population_scales ~ normal(0, 2);
+  population_scales ~ normal(0, 3);
 
   // individual level priors (subjects' parameters)
 
   alpha_random_effect ~ std_normal();
   
-  alpha_task_random_effect ~ std_normal();
-
   beta_random_effect ~ std_normal();
 
-  eta_random_effect ~ std_normal();
+  lambda0_random_effect ~ std_normal();
+  
+  lambda1_random_effect ~ std_normal();
 
   
 

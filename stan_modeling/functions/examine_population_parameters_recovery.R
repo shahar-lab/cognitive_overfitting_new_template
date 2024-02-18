@@ -27,25 +27,28 @@ load(paste0(path$data,'/model_parameters.Rdata'))
 Nparameters = length(model_parameters$artificial_population_location)
 p=list()
 for ( i in 1:Nparameters){
-  
   samples    = fit$draws(variables = paste0('population_locations[',i,']'),
                       format    = 'matrix')
-  
+  sample_value = mean(model_parameters$artificial_individual_parameters[,i])
+  true_value=model_parameters$artificial_population_location[i]
+  limit=c(0,10)
   if (model_parameters$transformation[i]=='logit'){
     samples = plogis(samples)
+    sample_value = plogis(mean(model_parameters$artificial_individual_parameters[,i]))
+    true_value=plogis(model_parameters$artificial_population_location[i])
+    limit=c(0,1)
   }
   if (model_parameters$transformation[i]=='exp'){
     samples = log(samples)
   }
   
   samples    = data.frame(samples=unlist(samples))
-  sample_value = mean(model_parameters$artificial_individual_parameters[,i])
-  true_value=model_parameters$artificial_population_location[i]
+
   p[[i]]=
   ggplot(data.frame(samples=as.numeric(unlist(samples))),aes(x=samples))+
     ggdist::stat_halfeye(point_interval = 'median_hdi',
-                         .width = c(0.89,0.97),
-                         fill = 'pink')+
+                         .width = c(0.85,0.95),
+                         fill = 'grey')+
     geom_vline(xintercept = true_value, 
                linetype="dotted",
                color = "blue", 
@@ -60,11 +63,11 @@ for ( i in 1:Nparameters){
     } else {
       p[[i]] = p[[i]] + scale_x_continuous(limits = c(-1, 10))
     }
-    
-  
+    xlab(model_parameters$names[i])+scale_x_continuous(limits=limit)+
+    mytheme
     theme(axis.ticks.y=element_blank(),
           axis.text.y=element_blank())
   
 }
-do.call("grid.arrange", c(p, ncol=1))
+do.call("grid.arrange", c(p, ncol=2))
 }

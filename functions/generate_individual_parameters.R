@@ -12,9 +12,8 @@ generate_individual_parameters=function(model_parameters,Nsubjects,plotme){
   
   #sample individual parameters
   for (p in 1:length(model_parameters$names)){
+  
     
-    #no transformation
-    if(model_parameters$transformation[p]=='none'){
       if(is.na(model_parameters$artificial_population_scale[p])) {
         
         x[,p]=model_parameters$artificial_population_location[p]
@@ -23,38 +22,6 @@ generate_individual_parameters=function(model_parameters,Nsubjects,plotme){
         x[,p]=(model_parameters$artificial_population_location[p]+
                  model_parameters$artificial_population_scale[p]*rnorm(Nsubjects))
       }
-    }
-    
-    
-    #logit transformation (between 0 to 1)
-    if(model_parameters$transformation[p]=='logit'){
-      if(is.na(model_parameters$artificial_population_scale[p])) {
-        
-        x[,p]=plogis(qlogis(model_parameters$artificial_population_location[p]))
-        
-      } else {
-        logit_mean = qlogis(model_parameters$artificial_population_location[p])
-        logit_sd   = qlogis(model_parameters$artificial_population_location[p] + model_parameters$artificial_population_scale[p]) - qlogis(model_parameters$artificial_population_location[p])
-        x[,p]=plogis(logit_mean + logit_sd*rnorm(Nsubjects))
-      }
-    }
-    
-    
-    
-    
-    #exp transformation (>0)
-    #also - this actually dont do anything (the number are not going to change here)
-    #this is just as a reminder
-    if(model_parameters$transformation[p]=='exp'){
-      if(is.na(model_parameters$artificial_population_scale[p])) {
-        
-        x[,p]=(exp(model_parameters$artificial_population_location[p]))
-        
-      } else {
-        x[,p]=(exp(model_parameters$artificial_population_location[p]+
-                        model_parameters$artificial_population_scale[p]*rnorm(Nsubjects)))
-      }
-    }
     
   }
   

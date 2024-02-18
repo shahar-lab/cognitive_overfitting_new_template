@@ -1,0 +1,14 @@
+model_stan_parameters=list()
+model_stan_parameters$parameters=c(
+  'first_trial_in_block', 
+  'block',
+  'trial',
+  'reward',
+  'card_left',
+  'card_right',
+  'ch_card',
+  'ch_key',
+  'selected_offer',
+  'catch_trial',
+  'condition_difficulty',
+  'condition_scarcity')

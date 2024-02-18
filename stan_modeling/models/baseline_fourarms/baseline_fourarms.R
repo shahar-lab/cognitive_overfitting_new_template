@@ -11,7 +11,7 @@ sim.block = function(subject,parameters,cfg){
   
   #set initial var
   Narms              = cfg$Narms
-  Nraffle            = cfg$Nraffle
+  Noptions            = cfg$Noptions
   Nblocks            = cfg$Nblocks
   Ntrials_perblock   = cfg$Ntrials_perblock
   expvalues          = cfg$rndwlk
@@ -27,13 +27,13 @@ for (block in 1:Nblocks){
   for (trial in 1:Ntrials_perblock){
 
     #computer offer
-    raffle    = sample(1:Narms,Nraffle,prob=rep(1/Narms,Narms)) 
-    raffle    = sort(raffle)
+    options    = sample(1:Narms,Noptions,prob=rep(1/Narms,Narms)) 
+    options    = sort(options)
     
     #players choice
-    p         = exp(beta*Qval[raffle]) / sum(exp(beta*Qval[raffle]))
-    choice    = sample(raffle,1,prob=p)
-    unchosen  = raffle[choice!=raffle]
+    p         = exp(beta*Qval[options]) / sum(exp(beta*Qval[options]))
+    choice    = sample(options,1,prob=p)
+    unchosen  = options[choice!=options]
     
     #outcome 
     reward = sample(0:1,1,prob=c(1-expvalues[choice,trial],expvalues[choice,trial]))
@@ -47,12 +47,12 @@ for (block in 1:Nblocks){
             trial                = trial,
             first_trial_in_block = (trial==1)*1,
             choice               = choice,
-            selected_offer       = (choice==raffle[2])*1,
+            selected_offer       = (choice==options[2])*1,
             unchosen             = unchosen,
-            offer1               = raffle[1],
-            offer2               = raffle[2],
+            offer1               = options[1],
+            offer2               = options[2],
             expval_ch            = expvalues[choice,trial],
-            expval_unch          = expvalues[raffle[choice!=raffle],trial],
+            expval_unch          = expvalues[options[choice!=options],trial],
             reward               = reward
             )
       

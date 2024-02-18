@@ -1,5 +1,5 @@
 model_parameters=list()
 model_parameters$names                             =c('alpha','beta','omega','omega_difficulty','omega_scarcity','omega_interaction')
 model_parameters$transformation                    =c('logit','none','logit','none','none','none')
-model_parameters$artificial_population_location    =c(0.3,4,0.2,0.3,0.3,0.3)
-model_parameters$artificial_population_scale       =c(1,1,1,0.2,0.2,0.2)
+model_parameters$artificial_population_location    =c(0.3,4,0.3,0.3,0.3,0.3)
+model_parameters$artificial_population_scale       =c(1,1,1,0.3,0.2,0.2)
