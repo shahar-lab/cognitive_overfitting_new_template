@@ -12,6 +12,7 @@ data {
   int<lower=2> Nraffle; //number of cards per trial
   
   int<lower=2> Ndims; //number of dimensions
+  
   real testfold;
   
   //Behavioral data:
@@ -33,6 +34,7 @@ data {
   array[Nsubjects, Ntrials] int<lower=0> first_trial_in_block;
   
   array[Nsubjects, Ntrials] int<lower=0> selected_offer;
+  
   array[Nsubjects, Ntrials] int<lower=0> fold;
 }
 transformed data {
@@ -179,38 +181,58 @@ model {
 }
 generated quantities {
   matrix[Ntrials, Nsubjects] log_lik;
+  
   matrix[Nsubjects, Ntrials] PE_card_g;
+  
   matrix[Nsubjects, Ntrials] PE_key_g;
   
   //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+  
   //Likelihood function per subject per trial
+  
   log_lik = rep_matrix(0, Ntrials, Nsubjects);
+  
   for (subject in 1 : Nsubjects) {
     vector[Narms] Qcards_g;
+    
     vector[Nraffle] Qkeys_g;
+    
     vector[Nraffle] Qnet_g;
+    
+    real Qnet_diff_g;
+    
     for (trial in 1 : Ntrials_per_subject[subject]) {
       if (fold[subject, trial] == testfold) {
         //reset Qvalues (first trial only)
+        
         if (first_trial_in_block[subject, trial] == 1) {
           Qcards_g = rep_vector(0.5, Narms);
+          
           Qkeys_g = rep_vector(0.5, Nraffle);
         }
+        
         Qnet_g[1] = Qcards_g[card_left[subject, trial]] + Qkeys_g[1]; //We compound the value of the card appearing on the left and the value of the left key.
         
         Qnet_g[2] = Qcards_g[card_right[subject, trial]] + Qkeys_g[2];
         
+        Qnet_diff_g = Qnet_g[2] - Qnet_g[1];
+        
         log_lik[trial, subject] = bernoulli_logit_lpmf(selected_offer[subject, trial] | beta[subject]
-                                                                    * Qnet_g);
+                                                                    * Qnet_diff_g);
         
         //calculating PEs
+        
         PE_card_g[subject, trial] = reward[subject, trial]
                                     - Qcards_g[ch_card[subject, trial]];
+        
         PE_key_g[subject, trial] = reward[subject, trial]
                                    - Qkeys_g[ch_key[subject, trial]];
+        
         //Update values ch_key=1 means choosing right
+        
         Qcards_g[ch_card[subject, trial]] += alpha_relevant[subject]
                                              * (PE_card_g[subject, trial]); //update card_value according to reward
+        
         Qkeys_g[ch_key[subject, trial]] += alpha_irrelevant[subject]
                                            * (PE_key_g[subject, trial]); //update key value according to reward
       }

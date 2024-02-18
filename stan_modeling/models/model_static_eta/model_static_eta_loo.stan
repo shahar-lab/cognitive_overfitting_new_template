@@ -34,6 +34,7 @@ data {
   array[Nsubjects, Ntrials] int<lower=0> first_trial_in_block;
   
   array[Nsubjects, Ntrials] int<lower=0> selected_offer;
+  
   array[Nsubjects, Ntrials] int<lower=0> fold;
 }
 transformed data {
@@ -221,6 +222,7 @@ model {
   }
 }
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
 generated quantities {
   matrix[Ntrials, Nsubjects] log_lik;
   
@@ -229,6 +231,7 @@ generated quantities {
   matrix[Nsubjects, Ntrials] PE_key_g;
   
   matrix[Ndims, Nsubjects] weights_g;
+  
   vector[Ndims] prior_relevant_g;
   
   vector[Ndims] weight_uniform_g;
@@ -261,11 +264,14 @@ generated quantities {
                             * prior_relevant_g[2]
                             + (1 - transformed_lambda_g[subject])
                               * weight_uniform_g[2];
+    
     vector[Narms] Qcards_g;
     
     vector[Nraffle] Qkeys_g;
     
     vector[Nraffle] Qnet_g;
+    
+    real Qnet_diff_g;
     
     for (trial in 1 : Ntrials_per_subject[subject]) {
       if (fold[subject, trial] == testfold) {
@@ -285,8 +291,10 @@ generated quantities {
                     * Qcards_g[card_right[subject, trial]]
                     + weights_g[2, subject] * Qkeys_g[2];
         
+        Qnet_diff_g = Qnet_g[2] - Qnet_g[1];
+        
         log_lik[trial, subject] = bernoulli_logit_lpmf(selected_offer[subject, trial] | beta[subject]
-                                                                    * Qnet_g);
+                                                                    * Qnet_diff_g);
         
         //calculating PEs
         
